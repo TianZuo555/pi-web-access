@@ -20,6 +20,7 @@ function buildProviderButtons(
 		{ value: "tavily", label: "Tavily", available: available.tavily },
 		{ value: "perplexity", label: "Perplexity", available: available.perplexity },
 		{ value: "gemini", label: "Gemini", available: available.gemini },
+		{ value: "fireclaw", label: "FireClaw", available: available.fireclaw },
 	];
 
 	return providers
@@ -1389,7 +1390,7 @@ const SCRIPT = `(function() {
   var token = DATA.sessionToken;
   var timeoutSec = DATA.timeout;
   var queries = Array.isArray(DATA.queries) ? DATA.queries : [];
-  var providers = ["openai", "exa", "brave", "parallel", "tavily", "perplexity", "gemini"];
+  var providers = ["openai", "exa", "brave", "parallel", "tavily", "perplexity", "gemini", "fireclaw"];
   var availProviders = DATA.availableProviders && typeof DATA.availableProviders === "object" ? DATA.availableProviders : {};
   var workflow = "summary-review";
   var initialDefaultProvider = typeof DATA.defaultProvider === "string" ? DATA.defaultProvider : "exa";
@@ -1596,6 +1597,7 @@ const SCRIPT = `(function() {
     if (provider === "perplexity") return "Perplexity";
     if (provider === "exa") return "Exa";
     if (provider === "gemini") return "Gemini";
+    if (provider === "fireclaw") return "FireClaw";
     return "Unknown";
   }
 

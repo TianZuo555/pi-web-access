@@ -35,6 +35,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { isPerplexityAvailable } from "./perplexity.ts";
 import { isExaAvailable } from "./exa.ts";
+import { isFireclawAvailable } from "./fireclaw.ts";
 import { isGeminiApiAvailable } from "./gemini-api.ts";
 import { getActiveGoogleEmail, isGeminiWebAvailable } from "./gemini-web.ts";
 import { isBrowserCookieAccessAllowed } from "./gemini-web-config.ts";
@@ -87,6 +88,7 @@ interface ProviderAvailability {
 	perplexity: boolean;
 	exa: boolean;
 	gemini: boolean;
+	fireclaw: boolean;
 }
 
 type WebSearchWorkflow = "none" | "summary-review" | "auto-summary";
@@ -190,6 +192,7 @@ async function getProviderAvailability(ctx: ExtensionContext): Promise<ProviderA
 		perplexity: isPerplexityAvailable(),
 		exa: isExaAvailable(),
 		gemini: isGeminiApiAvailable() || !!geminiWebAvail,
+		fireclaw: isFireclawAvailable(),
 	};
 }
 
@@ -257,6 +260,9 @@ function resolveProvider(
 	}
 	if (provider === "gemini" && !available.gemini) {
 		return firstAvailableProvider(available, preferOpenAI, "gemini");
+	}
+	if (provider === "fireclaw" && !available.fireclaw) {
+		return firstAvailableProvider(available, preferOpenAI, "fireclaw");
 	}
 	return provider;
 }

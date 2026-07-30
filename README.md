@@ -36,11 +36,13 @@ Works immediately with no API keys — Exa MCP provides zero-config search. If P
   "braveApiKey": "BSA_...",
   "exaApiKey": "exa-...",
   "perplexityApiKey": "pplx-...",
-  "geminiApiKey": "AIza..."
+  "geminiApiKey": "AIza...",
+  "fireclawBaseUrl": "http://localhost:8420",
+  "fireclawApiKey": "$FIRECLAW_API_KEY"
 }
 ```
 
-In `auto` mode (default), `web_search` tries OpenAI when suitable and available, then Exa (direct API if keyed, MCP if not), Brave, Parallel, Tavily, Perplexity, Gemini API, then Gemini Web when browser-cookie access is enabled.
+In `auto` mode (default), `web_search` tries OpenAI when suitable and available, then Exa (direct API if keyed, MCP if not), Brave, Parallel, Tavily, Perplexity, Gemini API, then Gemini Web when browser-cookie access is enabled, and finally FireClaw if a proxy base URL is configured.
 
 Optional dependencies for video frame extraction:
 
@@ -96,7 +98,7 @@ web_search({ queries: ["query 1", "query 2"], workflow: "auto-summary" })
 | `numResults` | Results per query (default: 5, max: 20) |
 | `recencyFilter` | `day`, `week`, `month`, or `year` |
 | `domainFilter` | Limit to domains (prefix with `-` to exclude) |
-| `provider` | `auto` (default), `openai`, `brave`, `parallel`, `tavily`, `exa`, `perplexity`, or `gemini` |
+| `provider` | `auto` (default), `openai`, `brave`, `parallel`, `tavily`, `exa`, `perplexity`, `gemini`, or `fireclaw` |
 | `includeContent` | Fetch full page content from sources in background |
 | `workflow` | `none` (skip curator), `summary-review` (open curator and auto-generate a summary draft, default), or `auto-summary` (generate a summary without opening the curator) |
 
@@ -255,6 +257,8 @@ Config defaults to `~/.pi/web-search.json`, or `web-search.json` under `PI_CODIN
   "geminiApiKey": "AIza...",
   "geminiBaseUrl": "https://my-gateway.example.com/gemini",
   "cloudflareApiKey": "...",
+  "fireclawBaseUrl": "http://localhost:8420",
+  "fireclawApiKey": "$FIRECLAW_API_KEY",
   "provider": "openai",
   "webSearch": {
     "enabled": true
@@ -332,6 +336,7 @@ Rate limits: Perplexity is capped at 10 requests/minute (client-side). Content f
 | `parallel.ts` | Parallel search provider and extraction fallback |
 | `tavily.ts` | Tavily Search API provider |
 | `exa.ts` | Exa.ai search provider — direct API and MCP proxy |
+| `fireclaw.ts` | FireClaw search provider — routes through a FireClaw prompt-injection security proxy |
 | `extract.ts` | URL/file path routing, HTTP extraction, fallback orchestration |
 | `gemini-search.ts` | Search routing across OpenAI, Brave, Parallel, Tavily, Exa, Perplexity, Gemini API, Gemini Web |
 | `gemini-url-context.ts` | Gemini URL Context + Web extraction fallbacks |

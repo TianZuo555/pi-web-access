@@ -5,13 +5,14 @@ import { getApiKey, getVersionedApiBase, buildKeyParam, buildAuthHeaders, isGate
 import { isGeminiWebAvailable, queryWithCookies } from "./gemini-web.ts";
 import { isPerplexityAvailable, searchWithPerplexity, type SearchResult, type SearchResponse, type SearchOptions } from "./perplexity.ts";
 import { hasExaApiKey, isExaAvailable, searchWithExa } from "./exa.ts";
+import { isFireclawAvailable, searchWithFireclaw } from "./fireclaw.ts";
 import { isBraveAvailable, searchWithBrave } from "./brave.ts";
 import { isOpenAISearchAvailable, searchWithOpenAI } from "./openai-search.ts";
 import { isParallelAvailable, searchWithParallel } from "./parallel.ts";
 import { isTavilyAvailable, searchWithTavily } from "./tavily.ts";
 import { getWebSearchConfigPath } from "./utils.ts";
 
-export type SearchProvider = "auto" | "openai" | "brave" | "parallel" | "tavily" | "perplexity" | "gemini" | "exa";
+export type SearchProvider = "auto" | "openai" | "brave" | "parallel" | "tavily" | "perplexity" | "gemini" | "exa" | "fireclaw";
 export type ResolvedSearchProvider = Exclude<SearchProvider, "auto">;
 
 export interface AttributedSearchResponse extends SearchResponse {
@@ -61,7 +62,7 @@ function normalizeSearchModel(value: unknown): string | undefined {
 
 function normalizeSearchProvider(value: unknown): SearchProvider {
 	const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
-	const valid: SearchProvider[] = ["auto", "openai", "brave", "parallel", "tavily", "perplexity", "gemini", "exa"];
+	const valid: SearchProvider[] = ["auto", "openai", "brave", "parallel", "tavily", "perplexity", "gemini", "exa", "fireclaw"];
 	return valid.includes(normalized as SearchProvider) ? normalized as SearchProvider : "auto";
 }
 
@@ -173,6 +174,12 @@ export async function search(query: string, options: FullSearchOptions = {}): Pr
 		}
 	}
 
+	if (provider === "fireclaw") {
+		const result = await searchWithFireclaw(query, options);
+		if (result) return { ...result, provider: "fireclaw" };
+		throw new Error("FireClaw search returned no results.");
+	}
+
 	const fallbackErrors: string[] = [];
 
 	if (shouldTryOpenAIInAuto(options)) {
@@ -245,6 +252,16 @@ export async function search(query: string, options: FullSearchOptions = {}): Pr
 		fallbackErrors.push(`Gemini: ${errorMessage(err)}`);
 	}
 
+	if (isFireclawAvailable()) {
+		try {
+			const result = await searchWithFireclaw(query, options);
+			if (result) return { ...result, provider: "fireclaw" };
+		} catch (err) {
+			if (isAbortError(err)) throw err;
+			fallbackErrors.push(`FireClaw: ${errorMessage(err)}`);
+		}
+	}
+
 	if (fallbackErrors.length > 0) {
 		throw new Error(`Auto provider search failed:\n  - ${fallbackErrors.join("\n  - ")}`);
 	}
@@ -255,7 +272,8 @@ export async function search(query: string, options: FullSearchOptions = {}): Pr
 		`  2. Set openaiApiKey, braveApiKey, parallelApiKey, tavilyApiKey, perplexityApiKey, exaApiKey, geminiApiKey, or cloudflareApiKey in ${CONFIG_PATH}\n` +
 		"  3. Set OPENAI_API_KEY, BRAVE_API_KEY, PARALLEL_API_KEY, TAVILY_API_KEY, EXA_API_KEY, PERPLEXITY_API_KEY, GEMINI_API_KEY, or CLOUDFLARE_API_KEY env vars\n" +
 		"  4. Set GOOGLE_GEMINI_BASE_URL with CLOUDFLARE_API_KEY for Cloudflare AI Gateway routing\n" +
-		"  5. Sign into gemini.google.com in a supported Chromium-based browser"
+		"  5. Sign into gemini.google.com in a supported Chromium-based browser\n" +
+		"  6. Run a FireClaw proxy (https://github.com/raiph-ai/fireclaw) and set fireclawBaseUrl in " + CONFIG_PATH
 	);
 }
 
